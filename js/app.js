@@ -1,5 +1,4 @@
 'use strict';
-// Місія 04 — стартовий каркас. Дані та ціни умовні.
 const DEMO_MENU = [
   {name:'Борщ український',category:'Перша страва',description:'250 мл',price:38,vegetarian:false,emoji:'🥣'},
   {name:'Суп овочевий',category:'Перша страва',description:'250 мл',price:34,vegetarian:true,emoji:'🍲'},
@@ -44,14 +43,26 @@ function renderMenu(items){
   if(items.length===0){const p=document.createElement('p');p.textContent='За обраними умовами страв не знайдено.';resultsElement.append(p);}
   resultCount.textContent=`Знайдено ${items.length} із ${loadedMenu.length} страв.`;
 }
+
 function applyFilters(){
-  // TODO 1: отримайте текст пошуку (trim, toLowerCase).
-  // TODO 2: отримайте категорію, ціну та стан перемикача.
-  // TODO 3: використайте loadedMenu.filter(...) з УСІМА чотирма умовами.
-  // TODO 4: передайте результат до renderMenu(...).
-  // Тимчасовий виклик нижче замініть власною реалізацією:
-  renderMenu(loadedMenu);
+  const searchText = searchInput.value.trim().toLowerCase();
+
+  const selectedCategory = categoryFilter.value;
+  const maxPrice = priceFilter.value;
+  const onlyVegetarian = vegetarianFilter.checked;
+
+  const filteredMenu = loadedMenu.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchText);
+    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    const matchesPrice = maxPrice === 'all' || item.price <= Number(maxPrice);
+    const matchesVegetarian = !onlyVegetarian || item.vegetarian;
+
+    return matchesSearch && matchesCategory && matchesPrice && matchesVegetarian;
+  });
+
+  renderMenu(filteredMenu);
 }
+
 async function loadMenu(shouldFail=false){
   if(isLoading)return;
   isLoading=true;loadButton.disabled=true;errorButton.disabled=true;
@@ -72,7 +83,21 @@ async function loadMenu(shouldFail=false){
     resultsElement.setAttribute('aria-busy','false');
   }
 }
-// TODO 5: підключіть події input/change до applyFilters().
-// TODO 6: реалізуйте скидання всіх чотирьох умов.
+
+searchInput.addEventListener('input', applyFilters);
+categoryFilter.addEventListener('change', applyFilters);
+priceFilter.addEventListener('change', applyFilters);
+vegetarianFilter.addEventListener('change', applyFilters);
+
+function resetFilters(){
+  searchInput.value = '';
+  categoryFilter.value = 'all';
+  priceFilter.value = 'all';
+  vegetarianFilter.checked = false;
+  applyFilters();
+  searchInput.focus();
+}
+resetButton.addEventListener('click', resetFilters);
+
 loadButton.addEventListener('click',()=>loadMenu(false));
 errorButton.addEventListener('click',()=>loadMenu(true));
